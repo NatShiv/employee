@@ -1,5 +1,6 @@
 package com.example.emploeebook.service;
 
+import com.example.emploeebook.customException.DataEntryError;
 import com.example.emploeebook.customException.EmployeeAlreadyAdded;
 import com.example.emploeebook.customException.EmployeeNotFound;
 import com.example.emploeebook.model.Employee;
@@ -7,41 +8,39 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
-
 @Service
 public class EmployeeService {
-    private final Map<String, Employee> employeeBook;
 
-    public EmployeeService() {
-        this.employeeBook = new HashMap<>();
-    }
+    private final Map<String, Employee> employeeBook = new HashMap<>();
 
-    public Employee add(String firstName, String lastName, double salary, int department) {
+
+    public Employee add(String firstName, String lastName, double salary, int department) throws DataEntryError {
         Employee employee = new Employee(firstName, lastName, salary, department);
-
-        if (employeeBook.containsKey(employee.fullName())) {
+        String key = Employee.fullName(firstName, lastName);
+        if (employeeBook.containsKey(key)) {
             throw new EmployeeAlreadyAdded("Сотрудник с такими параметрами уже сществует.");
         } else {
-            employeeBook.put(employee.fullName(), employee);
+            employeeBook.put(key, employee);
             return employee;
         }
     }
 
-    public Employee find(String firstName, String lastName) {
-        Employee employee = new Employee(firstName, lastName);
+    public Employee find(String firstName, String lastName) throws DataEntryError {
+       String key = Employee.fullName(firstName, lastName);
 
-        if (employeeBook.containsKey(employee.fullName())) {
-            return employeeBook.get(employee.fullName());
+        if (employeeBook.containsKey(key)) {
+            return employeeBook.get(key);
         } else {
             throw new EmployeeNotFound("Сотрудник с такими параметрами не найден.");
         }
     }
 
-    public Employee remove(String firstName, String lastName) {
-        Employee employee = new Employee(firstName, lastName);
+    public Employee remove(String firstName, String lastName) throws DataEntryError {
+        String key = Employee.fullName(firstName, lastName);
 
-        if (employeeBook.containsKey(employee.fullName())) {
-            employeeBook.remove(employee.fullName());
+        if (employeeBook.containsKey(key)) {
+            Employee employee= employeeBook.get(key);
+            employeeBook.remove(key);
             return employee;
         } else {
             throw new EmployeeNotFound("Сотрудник с такими параметрами не найден.");
@@ -49,9 +48,9 @@ public class EmployeeService {
         }
     }
 
-    public Collection<Employee> getEmployeeBook() {
+    public List<Employee> getEmployeeBook() {
 
-        return Collections.unmodifiableCollection(employeeBook.values());
+        return new ArrayList<>(employeeBook.values());
     }
 
 }
